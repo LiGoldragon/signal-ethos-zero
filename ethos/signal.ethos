@@ -1,0 +1,30 @@
+Interface.{0 1 0}
+Channel.{EthosZero 1 1}
+[]
+{
+  [Generate.GenerationRequest Observe.ObservationSelection]
+  [Generated.Generation Observed.Observation GenerationRejected.GenerationRefusal]
+  []
+  []
+  [
+    SourceName.String
+    RelativePath.String
+    ArtifactPath.String
+    FileLocation.{SourceName RelativePath}
+    GenerationRequest.{File.FileLocation}
+    Generation.{File.FileLocation Artifact.ArtifactPath}
+    ObservationSelection.[Assemblies]
+    AssemblySummary.{File.FileLocation Artifact.ArtifactPath}
+    Assemblies.Vector<AssemblySummary>
+    AssemblySnapshot.{Assemblies}
+    Observation.[Assemblies.AssemblySnapshot]
+    ExtentStart.Integer
+    ExtentEnd.Integer
+    SourceExtent.{ExtentStart ExtentEnd}
+    SyntaxFaultReason.String
+    SyntaxFault.{Extent.SourceExtent Reason.SyntaxFaultReason}
+    ProjectionFaultReason.String
+    ProjectionFault.{Reason.ProjectionFaultReason}
+    GenerationRefusal.[UnknownSource.SourceName FileAbsent.FileLocation ImportUnresolved.FileLocation InvalidEthos.SyntaxFault RustProjectionRejected.ProjectionFault]
+  ]
+}

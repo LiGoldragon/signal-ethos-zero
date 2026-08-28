@@ -1,0 +1,3 @@
+Generate.{{ethos-zero ethos/signal.ethos}}
+Observed.Assemblies.{{{{ethos-zero ethos/signal.ethos} src/generated/signal.rs}}}
+GenerationRejected.InvalidEthos.{{0 17} unexpected-interface-section}
