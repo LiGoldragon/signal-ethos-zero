@@ -1,5 +1,5 @@
-Interface.{0 1 0}
-Channel.{EthosZero 1 1}
+Interface.{0 2 0}
+Channel.{EthosZero 1 2}
 []
 {
   [Generate.GenerationRequest Observe.ObservationSelection]

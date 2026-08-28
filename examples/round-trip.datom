@@ -1,4 +1,9 @@
 Generate.{ethos-zero ethos/signal.ethos}
+Observe.Assemblies
 Generated.{{ethos-zero ethos/signal.ethos} src/generated/signal.rs}
 Observed.Assemblies.[{{ethos-zero ethos/signal.ethos} src/generated/signal.rs}]
+GenerationRejected.UnknownSource.missing
+GenerationRejected.FileAbsent.{ethos-zero ethos/missing.ethos}
+GenerationRejected.ImportUnresolved.{ethos-zero ethos/signal.ethos}
 GenerationRejected.InvalidEthos.{{0 17} unexpected-interface-section}
+GenerationRejected.RustProjectionRejected.unrepresentable-generated-identifier
