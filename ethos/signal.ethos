@@ -1,17 +1,18 @@
-Interface.{0 2 0}
-Channel.{EthosZero 1 2}
+Interface.{0 3 0}
+Channel.{EthosZero 1 3}
 []
 {
-  [Generate.GenerationRequest Observe.ObservationSelection]
+  [Generate.GenerationRequest Observe.ObservationSelection Subscribe.SubscriptionRequest Unsubscribe.SubscriptionRequest]
   [Generated.Generation Observed.Observation GenerationRejected.GenerationRefusal]
-  []
-  []
+  [InvalidRelativePath.RelativePath]
+  [GenerationStarted.GenerationRequest GenerationCompleted.Generation GenerationRefused.GenerationRefusal]
   [
     SourceName.String
     RelativePath.String
     ArtifactPath.String
     FileLocation.{SourceName RelativePath}
     GenerationRequest.{File.FileLocation}
+    SubscriptionRequest.{File.FileLocation}
     Generation.{File.FileLocation Artifact.ArtifactPath}
     ObservationSelection.[Assemblies]
     AssemblySummary.{File.FileLocation Artifact.ArtifactPath}
@@ -25,6 +26,6 @@ Channel.{EthosZero 1 2}
     SyntaxFault.{Extent.SourceExtent Reason.SyntaxFaultReason}
     ProjectionFaultReason.String
     ProjectionFault.{Reason.ProjectionFaultReason}
-    GenerationRefusal.[UnknownSource.SourceName FileAbsent.FileLocation ImportUnresolved.FileLocation InvalidEthos.SyntaxFault RustProjectionRejected.ProjectionFault]
+    GenerationRefusal.[UnknownSource.SourceName FileAbsent.FileLocation ImportUnresolved.FileLocation InvalidRelativePath.RelativePath InvalidEthos.SyntaxFault RustProjectionRejected.ProjectionFault]
   ]
 }

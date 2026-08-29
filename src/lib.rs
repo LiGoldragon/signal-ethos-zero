@@ -1,5 +1,7 @@
-//! Generation-zero Ethos ordinary Signal vocabulary.
+//! Generated Ethos ordinary Signal contract and hand-owned frame codec.
 
+pub mod codec;
 pub mod generated;
 
+pub use codec::*;
 pub use generated::signal::*;
