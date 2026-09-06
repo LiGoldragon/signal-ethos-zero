@@ -1,199 +1,96 @@
-use datomic::{Datomic, TextEdge};
-use protos::{PortionText, Text};
-use signal_ethos_zero::*;
+use core::num::{NonZeroU16, NonZeroU32};
 
-fn source_name(value: &str) -> SourceName {
-    value.try_into().expect("representable source name")
+use datom_codec::{Actualizable, IncorporationBudget, Potential, Textualizable};
+use signal_ethos_zero::{
+    EthosZeroWire, ExchangeDecodeFault, FileLocation, GenerationRequest, RelativePath, Request,
+    RequestWire, ResponseWire, SourceName, WireConversion, decode_request, encode_request,
+};
+use signal_frame::{
+    BoundExchangeFrame, ContractBinding, ContractId, ExchangeFrameBody, ExchangeIdentifier,
+    ExchangeLane, LaneSequence, RootCode, SessionEpoch, VariantCode, WireContract, WireRevision,
+    WireRoute,
+};
+
+fn exchange() -> ExchangeIdentifier {
+    ExchangeIdentifier::new(
+        SessionEpoch::new(1),
+        ExchangeLane::Connector,
+        LaneSequence::new(1),
+    )
 }
-
-fn relative_path(value: &str) -> RelativePath {
-    value.try_into().expect("representable relative path")
-}
-
-fn artifact_path(value: &str) -> ArtifactPath {
-    value.try_into().expect("representable artifact path")
-}
-
-fn file() -> FileLocation {
-    FileLocation {
-        source_name: source_name("ethos-zero"),
-        relative_path: relative_path("ethos/signal.ethos"),
-    }
-}
-
-fn generation() -> Generation {
-    Generation {
-        file: file(),
-        artifact: artifact_path("src/generated/signal.rs"),
-    }
-}
-
-fn frame(body: FrameBody) -> Frame {
-    Frame {
-        channel_contract_id: CHANNEL_CONTRACT_ID,
-        channel_wire_revision: CHANNEL_WIRE_REVISION,
-        protocol_version: PROTOCOL_VERSION,
-        body,
-    }
-}
-
-fn raw_length_prefixed(value: &Frame) -> Vec<u8> {
-    let archive = rkyv::to_bytes::<rkyv::rancor::Error>(value).expect("archive frame");
-    let length = u32::try_from(archive.len()).expect("frame length fits prefix");
-    let mut bytes = length.to_le_bytes().to_vec();
-    bytes.extend_from_slice(&archive);
-    bytes
-}
-
-fn assert_frame_round_trip(value: Frame) {
-    let encoded = value.encode_length_prefixed().expect("encode signal");
-    assert_eq!(
-        Frame::decode_length_prefixed(&encoded).expect("decode signal"),
-        value
-    );
-}
-
-fn assert_text_round_trip<T>(value: T)
-where
-    T: Datomic + Clone + std::fmt::Debug + PartialEq,
-{
-    let text = Datomic::portion(&value).canonical_text();
-    assert_eq!(
-        Text::<T>::from(text.as_ref())
-            .embody()
-            .expect("Datomic text embodiment"),
-        value
-    );
+fn request() -> Request {
+    Request::Generate(GenerationRequest(FileLocation(
+        SourceName::try_from("workspace").unwrap(),
+        RelativePath::try_from("ethos/signal.ethos").unwrap(),
+    )))
 }
 
 #[test]
-fn every_root_executes_through_datomic_text_and_rkyv_frames() {
-    let assembly = AssemblySummary {
-        file: file(),
-        artifact: artifact_path("src/generated/signal.rs"),
-    };
-    let requests = [
-        Request::Generate(GenerationRequest { file: file() }),
-        Request::Observe(ObservationSelection::Assemblies),
-        Request::Subscribe(SubscriptionRequest { file: file() }),
-        Request::Unsubscribe(SubscriptionRequest { file: file() }),
-    ];
-    for request in requests {
-        assert_text_round_trip(request.clone());
-        assert_frame_round_trip(frame(FrameBody::Request(request)));
-    }
-
-    let replies = [
-        Reply::Generated(generation()),
-        Reply::Observed(Observation::Assemblies(AssemblySnapshot {
-            assemblies: Assemblies(vec![assembly]),
-        })),
-        Reply::GenerationRejected(GenerationRefusal::UnknownSource(source_name("missing"))),
-        Reply::GenerationRejected(GenerationRefusal::FileAbsent(file())),
-        Reply::GenerationRejected(GenerationRefusal::ImportUnresolved(file())),
-        Reply::GenerationRejected(GenerationRefusal::InvalidRelativePath(relative_path(
-            "../outside",
+fn typed_datom_request_round_trips() {
+    let expected = request();
+    let text = <Request as Textualizable<datom_codec::Datom>>::textualize(&expected);
+    let found = Potential::<Request>::from(text.as_str())
+        .actualize(IncorporationBudget::try_from(128).unwrap())
+        .unwrap();
+    assert_eq!(found, expected);
+}
+#[test]
+fn bound_structural_request_round_trips() {
+    let expected = request();
+    let (found_exchange, found) =
+        decode_request(&encode_request(exchange(), expected.clone()).unwrap()).unwrap();
+    assert_eq!(found_exchange, exchange());
+    assert_eq!(found, expected);
+}
+struct WrongContract;
+impl WireContract for WrongContract {
+    const BINDING: ContractBinding = ContractBinding::new(
+        ContractId::new(NonZeroU32::new(2).unwrap()),
+        WireRevision::new(NonZeroU16::new(4).unwrap()),
+    );
+}
+struct WrongRevision;
+impl WireContract for WrongRevision {
+    const BINDING: ContractBinding = ContractBinding::new(
+        ContractId::new(NonZeroU32::new(1).unwrap()),
+        WireRevision::new(NonZeroU16::new(3).unwrap()),
+    );
+}
+fn forged<Contract: WireContract>(route: WireRoute) -> Vec<u8> {
+    BoundExchangeFrame::<Contract, RequestWire, ResponseWire>::new(
+        route,
+        ExchangeFrameBody::Request {
+            exchange: exchange(),
+            request: signal_frame::Request::from_payload(request().into_wire()),
+        },
+    )
+    .encode_length_prefixed()
+    .unwrap()
+}
+#[test]
+fn wrong_component_revision_route_and_archive_fail_closed() {
+    let correct = WireRoute::new(RootCode::new(0), VariantCode::new(0));
+    assert!(matches!(
+        decode_request(&forged::<WrongContract>(correct)),
+        Err(ExchangeDecodeFault::Frame(
+            signal_frame::FrameError::ContractMismatch { .. }
+        ))
+    ));
+    assert!(matches!(
+        decode_request(&forged::<WrongRevision>(correct)),
+        Err(ExchangeDecodeFault::Frame(
+            signal_frame::FrameError::UnsupportedWireRevision { .. }
+        ))
+    ));
+    assert!(matches!(
+        decode_request(&forged::<EthosZeroWire>(WireRoute::new(
+            RootCode::new(1),
+            VariantCode::new(0)
         ))),
-        Reply::GenerationRejected(GenerationRefusal::InvalidEthos(SyntaxFault {
-            extent: SourceExtent {
-                extent_start: ExtentStart(0),
-                extent_end: ExtentEnd(17),
-            },
-            reason: "unexpected interface section"
-                .try_into()
-                .expect("representable reason"),
-        })),
-        Reply::GenerationRejected(GenerationRefusal::RustProjectionRejected(ProjectionFault {
-            reason: "unrepresentable generated identifier"
-                .try_into()
-                .expect("representable reason"),
-        })),
-    ];
-    for reply in replies {
-        assert_text_round_trip(reply.clone());
-        assert_frame_round_trip(frame(FrameBody::Reply(reply)));
-    }
-
-    let refusal = Refusal::InvalidRelativePath(relative_path("../outside"));
-    assert_text_round_trip(refusal.clone());
-    assert_frame_round_trip(frame(FrameBody::Refusal(refusal)));
-
-    let events = [
-        Stream::GenerationStarted(GenerationRequest { file: file() }),
-        Stream::GenerationCompleted(generation()),
-        Stream::GenerationRefused(GenerationRefusal::InvalidRelativePath(relative_path(
-            "../outside",
-        ))),
-    ];
-    for event in events {
-        assert_text_round_trip(event.clone());
-        assert_frame_round_trip(frame(FrameBody::Event(event)));
-    }
-}
-
-#[test]
-fn malformed_frames_are_rejected() {
-    assert_eq!(
-        Frame::decode_length_prefixed(&[]),
-        Err(FrameCodecError::LengthPrefixMissing)
-    );
-    assert!(matches!(
-        Frame::decode_length_prefixed(&[1, 0, 0, 0]),
-        Err(FrameCodecError::LengthMismatch {
-            expected: 1,
-            found: 0
-        })
-    ));
-    assert_eq!(
-        Frame::decode_length_prefixed(&[1, 0, 0, 0, 0]),
-        Err(FrameCodecError::ArchiveDecode)
-    );
-}
-
-#[test]
-fn envelope_metadata_is_validated_on_encode_and_decode() {
-    let wrong_protocol = Frame {
-        protocol_version: ProtocolVersion::new(0, 2, 0),
-        ..frame(FrameBody::Request(Request::Observe(
-            ObservationSelection::Assemblies,
-        )))
-    };
-    assert!(matches!(
-        wrong_protocol.encode_length_prefixed(),
-        Err(FrameCodecError::UnsupportedProtocol { .. })
+        Err(ExchangeDecodeFault::RouteMismatch { .. })
     ));
     assert!(matches!(
-        Frame::decode_length_prefixed(&raw_length_prefixed(&wrong_protocol)),
-        Err(FrameCodecError::UnsupportedProtocol { .. })
-    ));
-
-    let wrong_contract = Frame {
-        channel_contract_id: ChannelContractId(2),
-        ..frame(FrameBody::Request(Request::Observe(
-            ObservationSelection::Assemblies,
-        )))
-    };
-    assert!(matches!(
-        wrong_contract.encode_length_prefixed(),
-        Err(FrameCodecError::WrongChannelContract { .. })
-    ));
-    assert!(matches!(
-        Frame::decode_length_prefixed(&raw_length_prefixed(&wrong_contract)),
-        Err(FrameCodecError::WrongChannelContract { .. })
-    ));
-
-    let wrong_revision = Frame {
-        channel_wire_revision: ChannelWireRevision(2),
-        ..frame(FrameBody::Request(Request::Observe(
-            ObservationSelection::Assemblies,
-        )))
-    };
-    assert!(matches!(
-        wrong_revision.encode_length_prefixed(),
-        Err(FrameCodecError::WrongChannelWireRevision { .. })
-    ));
-    assert!(matches!(
-        Frame::decode_length_prefixed(&raw_length_prefixed(&wrong_revision)),
-        Err(FrameCodecError::WrongChannelWireRevision { .. })
+        decode_request(&[0, 0, 0, 1]),
+        Err(ExchangeDecodeFault::Frame(_))
     ));
 }

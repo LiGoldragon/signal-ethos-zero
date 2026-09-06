@@ -1,31 +1,5 @@
-Interface.{0 3 0}
-Channel.{EthosZero 1 3}
+Signal
 []
-{
-  [Generate.GenerationRequest Observe.ObservationSelection Subscribe.SubscriptionRequest Unsubscribe.SubscriptionRequest]
-  [Generated.Generation Observed.Observation GenerationRejected.GenerationRefusal]
-  [InvalidRelativePath.RelativePath]
-  [GenerationStarted.GenerationRequest GenerationCompleted.Generation GenerationRefused.GenerationRefusal]
-  [
-    SourceName.String
-    RelativePath.String
-    ArtifactPath.String
-    FileLocation.{SourceName RelativePath}
-    GenerationRequest.{File.FileLocation}
-    SubscriptionRequest.{File.FileLocation}
-    Generation.{File.FileLocation Artifact.ArtifactPath}
-    ObservationSelection.[Assemblies]
-    AssemblySummary.{File.FileLocation Artifact.ArtifactPath}
-    Assemblies.Vector<AssemblySummary>
-    AssemblySnapshot.{Assemblies}
-    Observation.[Assemblies.AssemblySnapshot]
-    ExtentStart.Integer
-    ExtentEnd.Integer
-    SourceExtent.{ExtentStart ExtentEnd}
-    SyntaxFaultReason.String
-    SyntaxFault.{Extent.SourceExtent Reason.SyntaxFaultReason}
-    ProjectionFaultReason.String
-    ProjectionFault.{Reason.ProjectionFaultReason}
-    GenerationRefusal.[UnknownSource.SourceName FileAbsent.FileLocation ImportUnresolved.FileLocation InvalidRelativePath.RelativePath InvalidEthos.SyntaxFault RustProjectionRejected.ProjectionFault]
-  ]
-}
+[ Generate.GenerationRequest Observe.ObservationSelection Subscribe.SubscriptionRequest Unsubscribe.SubscriptionRequest ]
+[ Generated.Generation Observed.Observation GenerationRejected.GenerationRefusal GenerationStarted.GenerationRequest GenerationCompleted.Generation GenerationRefused.GenerationRefusal ]
+[ SourceName.Text RelativePath.Text ArtifactPath.Text FileLocation.{ SourceName RelativePath } GenerationRequest.{ FileLocation } SubscriptionRequest.{ FileLocation } Generation.{ FileLocation ArtifactPath } ObservationSelection.[ Assemblies ] AssemblySummary.{ FileLocation ArtifactPath } Assemblies.Vector<AssemblySummary> AssemblySnapshot.{ Assemblies } Observation.[ Assemblies.AssemblySnapshot ] ExtentStart.Integer ExtentEnd.Integer SourceExtent.{ ExtentStart ExtentEnd } SyntaxFaultReason.Text SyntaxFault.{ SourceExtent SyntaxFaultReason } ProjectionFaultReason.Text ProjectionFault.{ ProjectionFaultReason } GenerationRefusal.[ UnknownSource.SourceName FileAbsent.FileLocation ImportUnresolved.FileLocation InvalidRelativePath.RelativePath InvalidEthos.SyntaxFault RustProjectionRejected.ProjectionFault ] ]
