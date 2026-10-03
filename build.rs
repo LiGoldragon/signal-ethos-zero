@@ -1,18 +1,36 @@
-use ethos_zero::{Actualizing, File, Generating, Potential};
+//! Every authored ethos file is held in the generator's own vertical print,
+//! and its committed Rust byte-identical to what ethos-zero generates from it.
+
+use ethos_zero::{Actualizing, File, Generating, Potential, Printable};
 
 fn main() {
     let root = std::path::PathBuf::from(std::env::var_os("CARGO_MANIFEST_DIR").expect("manifest"));
-    println!("cargo:rerun-if-changed=ethos/signal.ethos");
-    println!("cargo:rerun-if-changed=src/generated/signal.rs");
-    let source = std::fs::read_to_string(root.join("ethos/signal.ethos")).expect("source");
-    let file = Potential::<File>::from(source)
-        .actualize()
-        .unwrap_or_else(|_| panic!("read Signal"));
-    let generated = file
-        .generate()
-        .unwrap_or_else(|_| panic!("generate Signal"));
-    assert_eq!(
-        generated,
-        std::fs::read_to_string(root.join("src/generated/signal.rs")).expect("generated")
-    );
+    for stem in ["library", "signal"] {
+        let ethos = root.join(format!("ethos/{stem}.ethos"));
+        let rust = root.join(format!("src/generated/{stem}.rs"));
+        println!("cargo:rerun-if-changed={}", ethos.display());
+        println!("cargo:rerun-if-changed={}", rust.display());
+        let source = std::fs::read_to_string(&ethos).expect("source");
+        let file = Potential::<File>::from(source.clone())
+            .actualize()
+            .unwrap_or_else(|_| panic!("read {stem}.ethos"));
+        let body: String = source
+            .lines()
+            .skip_while(|line| line.starts_with(';'))
+            .map(|line| format!("{line}\n"))
+            .collect();
+        assert_eq!(
+            body,
+            file.print(),
+            "{stem}.ethos is not in the canonical print"
+        );
+        let generated = file
+            .generate()
+            .unwrap_or_else(|_| panic!("generate {stem}.ethos"));
+        assert_eq!(
+            generated,
+            std::fs::read_to_string(&rust).expect("generated"),
+            "src/generated/{stem}.rs is stale"
+        );
+    }
 }

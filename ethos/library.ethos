@@ -1,0 +1,10 @@
+; Ethos-zero Library — the names the Ethos Nexus's ordinary and meta
+; contracts share. A source is named; a file within it is a path relative
+; to that source.
+Library
+[]
+[ SourceName.String
+  RelativePath.String
+  FileLocation.{ SourceName RelativePath } ]
+[]
+[]

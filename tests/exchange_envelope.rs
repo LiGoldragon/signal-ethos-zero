@@ -2,8 +2,8 @@
 //!
 //! Every value is framed, read back off a byte stream and attributed to its
 //! exchange. The one thing taken from outside the crate is the digest oracle,
-//! computed by the published FNV-1a algorithm over `ethos/signal.ethos` in
-//! Python rather than through the path under test.
+//! computed by the published FNV-1a algorithm over `ethos/library.ethos` then
+//! `ethos/signal.ethos` in Python rather than through the path under test.
 
 use std::io::Cursor;
 
@@ -12,14 +12,11 @@ use signal::{
     ExchangeLedger, ExchangeMinting, Exchanged, FrameCapacity, FrameReading, FrameWriting, Greeted,
     Handshake, HandshakeReceipt, HandshakeRejection, Opening, Restorable, Signal, Signalizable,
 };
-use signal_ethos_zero::{
-    ETHOS, FileLocation, Generation, GenerationRefusal, GenerationRequest, Query, Response,
-    SubscriptionRequest,
-};
+use signal_ethos_zero::{ETHOS, FileLocation, Generation, GenerationRefusal, Query, Response};
 
-/// FNV-1a over exactly the bytes of `ethos/signal.ethos`, as a signed 64-bit
-/// integer.
-const ORDINARY_DIGEST: ContractDigest = 423_590_495_342_270_605;
+/// FNV-1a over exactly the bytes of `ethos/library.ethos` followed by those of
+/// `ethos/signal.ethos`, as a signed 64-bit integer.
+const ORDINARY_DIGEST: ContractDigest = -1_927_924_637_596_380_248;
 
 /// A peer built from another source: the same envelope, another contract.
 struct OtherContract;
@@ -112,9 +109,7 @@ fn the_greeting_and_a_generate_cross_the_wire_as_dispatches() {
     let exchange = ledger.open().expect("open an exchange");
     let opening = Dispatch::Open(Opening {
         exchange,
-        query: Query::Generate(GenerationRequest {
-            file_location: FileLocation::located("ethos/signal.ethos"),
-        }),
+        query: Query::Generate(FileLocation::located("ethos/signal.ethos")),
     });
     let received = opening.across();
     assert_eq!(received, opening);
@@ -148,9 +143,7 @@ fn a_subscription_and_a_generate_are_told_apart_by_exchange_alone() {
     let mut ledger = ExchangeLedger::greeted();
     let watching = ledger.open().expect("open the subscription");
     let generating = ledger.open().expect("open the Generate exchange");
-    let request = GenerationRequest {
-        file_location: FileLocation::located("ethos/signal.ethos"),
-    };
+    let request = FileLocation::located("ethos/signal.ethos");
     let generation = Generation {
         file_location: FileLocation::located("ethos/signal.ethos"),
         artifact_path: "src/generated/signal.rs".to_owned(),
@@ -159,9 +152,7 @@ fn a_subscription_and_a_generate_are_told_apart_by_exchange_alone() {
     let opened = vec![
         Dispatch::Open(Opening {
             exchange: watching,
-            query: Query::Subscribe(SubscriptionRequest {
-                file_location: FileLocation::located("ethos/signal.ethos"),
-            }),
+            query: Query::Subscribe(FileLocation::located("ethos/signal.ethos")),
         }),
         Dispatch::Open(Opening {
             exchange: generating,

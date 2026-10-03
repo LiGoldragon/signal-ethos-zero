@@ -1,5 +1,52 @@
 # Upgrades
 
+## 2.0.0 — vision shape, a Library, signal 8.0.0 and ethos-zero 16.0.0
+
+A clean breaking deployment with no compatibility path. Nothing serves this
+contract yet; a future Ethos Nexus and its CLIs are built from this revision
+and meta-signal-ethos-zero 2.0.0 together.
+
+- Pins: signal 8.0.0 `f35460de`, ethos-zero 16.0.0 `c2653dd8`, protos and
+  datom-codec 0.32.2 (`15b41da8`, `4dff16b4`), as before.
+- A Library root, `ethos/library.ethos`, holds the names the ordinary and
+  meta contracts share: `SourceName`, `RelativePath`, `FileLocation`. The
+  Signal imports them as `signal_ethos_zero:[ … ]`; the crate names itself
+  `signal_ethos_zero` (`extern crate self`) so the import resolves here as
+  it does in meta-signal-ethos-zero. The Rust names stay at the crate root.
+- The wire identity is now the digest of `ethos/library.ethos` followed by
+  `ethos/signal.ethos` (`ETHOS`); `LIBRARY` exports the Library alone. A
+  1.0.0 peer is refused at the greeting with `ContractMismatch`.
+- Both files are held in ethos-zero's own vertical print by `build.rs`.
+- Variant names are unchanged, so every value whose data did not change
+  reads and prints the same datom text. Where a holder type was removed,
+  the text loses one brace level:
+
+  | Value | 1.0.0 | 2.0.0 |
+  |-|-|-|
+  | `Generate`, `Subscribe`, `Unsubscribe`, `GenerationStarted` | `Generate.{ { src path } }` | `Generate.{ src path }` |
+  | `Observed.Assemblies` | `Observed.Assemblies.{ [ … ] }` | `Observed.Assemblies.[ … ]` |
+  | `RustProjectionRejected` | `RustProjectionRejected.{ reason }` | `RustProjectionRejected.reason` |
+
+  Unchanged text: `Observe.Assemblies`, `Generated.{ { src path } artifact }`,
+  `GenerationCompleted`, and every `GenerationRejected` and
+  `GenerationRefused` refusal but `RustProjectionRejected`, including
+  `InvalidEthos.{ { start end } reason }`.
+- Rust types removed: `GenerationRequest` and `SubscriptionRequest` (the
+  variants carry `FileLocation`), `AssemblySnapshot` and `AssemblySummary`
+  (`Observed_Data::Assemblies(Vec<Generation>)`), `ObservationSelection`
+  (`Observe_Data`), `Observation` (`Observed_Data`), `SyntaxFault`,
+  `SourceExtent`, `ExtentStart`, `ExtentEnd`, `SyntaxFaultReason`
+  (`InvalidEthos_Data { extent: Extent { start, end }, reason }`),
+  `ProjectionFault`, `ProjectionFaultReason` (`RustProjectionRejected(String)`).
+
+To deploy, in each consumer (none is deployed today):
+
+1. Repin signal-ethos-zero to this revision and signal to 8.0.0.
+2. Replace the removed names as listed; datom text written by hand for the
+   three changed shapes drops the inner braces.
+3. Rebuild both ends of every connection together; the greeting refuses a
+   mixed pair.
+
 ## 1.0.0 — signal 7.0.0's exchange layer
 
 A clean breaking wire deployment with no compatibility path. Nothing serves

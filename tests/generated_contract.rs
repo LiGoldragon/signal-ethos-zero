@@ -3,34 +3,29 @@
 
 use signal::{ByteViewable, Restorable, Signal, Signalizable};
 use signal_ethos_zero::{
-    FileLocation, GenerationRefusal, GenerationRequest, ObservationSelection, Query, Response,
-    SyntaxFault,
+    Extent, FileLocation, GenerationRefusal, InvalidEthos_Data, Observe_Data, Query, Response,
 };
 
 fn generate() -> Query {
-    Query::Generate(GenerationRequest {
-        file_location: FileLocation {
-            source_name: "workspace".to_owned(),
-            relative_path: "ethos/signal.ethos".to_owned(),
-        },
+    Query::Generate(FileLocation {
+        source_name: "workspace".to_owned(),
+        relative_path: "ethos/signal.ethos".to_owned(),
     })
 }
 
 #[test]
 fn query_and_response_round_trip_as_portable_frames() {
-    for query in [generate(), Query::Observe(ObservationSelection::Assemblies)] {
+    for query in [generate(), Query::Observe(Observe_Data::Assemblies)] {
         let frame = query.signalize().expect("signalize");
         assert!(!frame.bytes().is_empty());
         let received = Signal::<Query>::from(frame.bytes().to_vec());
         assert_eq!(received.restore().expect("restore query"), query);
     }
-    let response = Response::GenerationRejected(GenerationRefusal::InvalidEthos(SyntaxFault {
-        source_extent: signal_ethos_zero::SourceExtent {
-            extent_start: 0,
-            extent_end: 17,
-        },
-        syntax_fault_reason: "unexpected-interface-section".to_owned(),
-    }));
+    let response =
+        Response::GenerationRejected(GenerationRefusal::InvalidEthos(InvalidEthos_Data {
+            extent: Extent { start: 0, end: 17 },
+            reason: "unexpected-interface-section".to_owned(),
+        }));
     let frame = response.signalize().expect("signalize");
     assert_eq!(frame.restore().expect("restore response"), response);
 }
@@ -72,5 +67,39 @@ fn every_example_line_reads_as_a_query_or_a_response_and_reads_back_equal() {
             responses += 1;
         }
     }
-    assert_eq!((queries, responses), (2, 7));
+    assert_eq!((queries, responses), (3, 8));
+}
+
+/// The three shapes 2.0.0 changed (UPGRADES.md): their 1.0.0 text, one brace
+/// level deeper, no longer reads as either root.
+#[cfg(feature = "datom")]
+#[test]
+fn the_text_of_a_removed_holder_no_longer_reads() {
+    use datom_codec::{Actualizing, Budget, Potential};
+    use protos::ReaderBudget;
+
+    fn budget() -> Budget {
+        Budget {
+            remaining: 1_024,
+            reader: ReaderBudget { remaining: 1_024 },
+            depth: 0,
+            maximum_depth: 1_024,
+        }
+    }
+    for line in [
+        "Generate.{ { ethos-zero ethos/signal.ethos } }",
+        "Observed.Assemblies.{ [ { { ethos-zero ethos/signal.ethos } src/generated/signal.rs } ] }",
+        "GenerationRejected.RustProjectionRejected.{ unrepresentable-generated-identifier }",
+    ] {
+        assert!(
+            Potential::<Query>::from(line.to_owned())
+                .actualize(&mut budget())
+                .is_err()
+        );
+        assert!(
+            Potential::<Response>::from(line.to_owned())
+                .actualize(&mut budget())
+                .is_err()
+        );
+    }
 }

@@ -1,9 +1,11 @@
-Generate.{ { ethos-zero ethos/signal.ethos } }
+Generate.{ ethos-zero ethos/signal.ethos }
 Observe.Assemblies
+Subscribe.{ ethos-zero ethos/signal.ethos }
 Generated.{ { ethos-zero ethos/signal.ethos } src/generated/signal.rs }
-Observed.Assemblies.{ [ { { ethos-zero ethos/signal.ethos } src/generated/signal.rs } ] }
+Observed.Assemblies.[ { { ethos-zero ethos/signal.ethos } src/generated/signal.rs } ]
 GenerationRejected.UnknownSource.missing
 GenerationRejected.FileAbsent.{ ethos-zero ethos/missing.ethos }
 GenerationRejected.ImportUnresolved.{ ethos-zero ethos/signal.ethos }
 GenerationRejected.InvalidEthos.{ { 0 17 } unexpected-interface-section }
-GenerationRejected.RustProjectionRejected.{ unrepresentable-generated-identifier }
+GenerationRejected.RustProjectionRejected.unrepresentable-generated-identifier
+GenerationStarted.{ ethos-zero ethos/signal.ethos }
