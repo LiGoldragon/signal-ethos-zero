@@ -20,9 +20,11 @@
         };
         inherit (rust) craneLib toolchain;
         ethosFilter = path: type: type == "regular" && pkgs.lib.hasSuffix ".ethos" path;
+        # The datom examples are read by the datom contract test.
+        datomFilter = path: type: type == "regular" && pkgs.lib.hasSuffix ".datom" path;
         src = rust.cleanSource {
           root = ./.;
-          extraFilters = [ ethosFilter ];
+          extraFilters = [ ethosFilter datomFilter ];
         };
         commonArgs = { inherit src; strictDeps = true; nativeBuildInputs = [ pkgs.rustfmt ]; };
         cargoArtifacts = craneLib.buildDepsOnly commonArgs;
