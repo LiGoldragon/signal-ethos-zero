@@ -1,13 +1,18 @@
 # signal-ethos-zero
 
-This repository is the generation-zero ordinary Signal contract for Ethos. It owns the
-authored `ethos/signal.ethos`, its committed hand-written Rust projection, and a
-validated length-prefixed rkyv exchange frame codec. Its globally allocated binding
-is ContractId 7 at revision 4; 1/2 remain the historical Orchestrate allocations,
-3/4 belong to Criome, and 5/6 belong to Lojix. Every frame validates the
-EthosZero binding and route before its body is accepted. It owns no runtime, CLI, parser, string
-codec, generator, storage, actors, or streams.
+This repository is the generation-zero ordinary Signal contract for Ethos. It
+owns the authored `ethos/signal.ethos` and the committed Rust that ethos-zero
+generates from it, and nothing else: no runtime, CLI, parser, generator,
+storage or framing.
 
-`examples/round-trip.datom` gives concrete positional Datomic values as contract
-examples. They are deliberately specification data only: a future CLI is the sole
-text-to-Signal boundary, while this crate speaks rkyv Signal only.
+Framing, the greeting and the exchange envelope are signal's. The contract's
+wire identity is the digest of its authored source, so a peer built from any
+other source is refused at the greeting rather than negotiated with; there is
+no allocated contract number and no revision. Every generated type archives
+with rkyv; its datom derives sit behind the `datom` feature, which a CLI
+enables and a Nexus does not.
+
+`examples/round-trip.datom` holds the datom text of concrete values; the
+`datom` feature's test reads every line and reads it back equal. Production
+Rust carries no free function and no inherent method, held by the
+`no-free-functions` and `no-inherent-methods` flake checks.

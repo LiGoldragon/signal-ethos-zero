@@ -1,9 +1,14 @@
 # signal-ethos-zero
 
-Generation-zero ordinary Signal vocabulary for Ethos, version 0.5.0.
+Generation-zero ordinary Signal vocabulary for Ethos, version 1.0.0: the
+wire of the Ethos Nexus that follows ethos-zero, which nothing serves yet.
 
-The public API re-exports the generated request and response vocabulary. Typed Datom
-is the text boundary; socket bytes are length-prefixed structural rkyv values in a
-`BoundExchangeFrame`. The ordinary Ethos-zero contract owns globally allocated
-`ContractId` 7 at wire revision 4. It validates that binding before archive decoding
-and validates the request or response route before recovering the generated wire value.
+`ethos/signal.ethos` is the authored source; `src/generated/signal.rs` is its
+ethos-zero 15.0.0 projection, held byte-identical by `build.rs`. Regenerate it
+with `ethos-zero 'Generate.{ /abs/ethos/signal.ethos /abs/src/generated }'`.
+
+The contract rides signal 7.0.0's exchange layer: a connection is greeted once
+with the digest of `ethos/signal.ethos` (`signal::Contracted for Query`), each
+query travels as `Dispatch::Open` on an exchange the peer names, and each
+response comes back as `Delivery::Answer` on that exchange until
+`Delivery::End`. Datom text is behind the `datom` feature, for the CLI only.
