@@ -39,7 +39,7 @@ fn every_example_line_reads_as_a_query_or_a_response_and_reads_back_equal() {
     fn budget() -> Budget {
         Budget {
             remaining: 1_024,
-            reader: ReaderBudget { remaining: 1_024 },
+            reader: ReaderBudget::try_from(1_024).unwrap(),
             depth: 0,
             maximum_depth: 1_024,
         }
@@ -81,7 +81,7 @@ fn the_text_of_a_removed_holder_no_longer_reads() {
     fn budget() -> Budget {
         Budget {
             remaining: 1_024,
-            reader: ReaderBudget { remaining: 1_024 },
+            reader: ReaderBudget::try_from(1_024).unwrap(),
             depth: 0,
             maximum_depth: 1_024,
         }

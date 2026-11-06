@@ -1,5 +1,20 @@
 # Upgrades
 
+## 2.1.0 — datom-codec 0.33.0 and protos 0.33.0
+
+The optional `datom` feature repins datom-codec 0.33.0 (`eabead4`) and protos
+0.33.0 (`3c7ade3`), up from 0.32.2. Signal 8.0.0 (`f35460de`) and ethos-zero
+16.0.0 (`c2653dd8`) stay as pinned. A consumer enabling `datom` repins both to
+those revisions and runs its tests.
+
+- protos 0.33.0 reads a bare unbalanced guillemet inside a guillemet string, or
+  a literal backslash before a guillemet, differently, and prints a balanced
+  guillemet pair inside a string without an escape. A consumer holding datom
+  text with either form re-reads it and updates the expectation.
+- A consumer building a `ReaderBudget` by its field replaces it with
+  `ReaderBudget::try_from(n).unwrap()`; the field is private.
+- The generated contract is unchanged.
+
 ## 2.0.0 — vision shape, a Library, signal 8.0.0 and ethos-zero 16.0.0
 
 A clean breaking deployment with no compatibility path. Nothing serves this
