@@ -19,7 +19,7 @@ use signal_ethos_zero::{
 
 /// FNV-1a over exactly the bytes of `ethos/library.ethos` followed by those of
 /// `ethos/signal.ethos`, as a signed 64-bit integer.
-const ORDINARY_DIGEST: ContractDigest = -1_927_924_637_596_380_248;
+const ORDINARY_DIGEST: ContractDigest = ContractDigest(-1_927_924_637_596_380_248);
 
 /// A peer built from another source: the same envelope, another contract.
 struct OtherContract;
@@ -125,7 +125,7 @@ fn the_greeting_and_a_generate_cross_the_wire_as_dispatches() {
 
 #[test]
 fn a_refused_generation_is_an_answer_and_then_an_ending() {
-    let exchange: ExchangeId = 1;
+    let exchange = ExchangeId(1);
     let refusal: Delivery<Response> = Delivery::Answer(Answer {
         exchange,
         response: Response::GenerationRejected(GenerationRefusal::FileAbsent(

@@ -1,5 +1,15 @@
 # Upgrades
 
+## 2.2.1 — ethos-zero 19.2.0 generator, Signal 10.3.0
+
+The build and dev dependency ethos-zero is repinned to 19.2.0 (`5a5d`), and the
+dependency on signal to 10.3.0 (`7afb`). The committed generated Rust is
+regenerated: the three `String` newtypes, `SourceName`, `RelativePath`,
+`ArtifactPath` and `Reason`, additionally derive `PartialOrd` and `Ord`, and the
+two `i64` newtypes, `Start` and `End`, additionally derive `Copy`, `PartialOrd`
+and `Ord`. The change adds capabilities and removes none. The authored ethos
+files are unchanged, so the contract digest is unchanged.
+
 ## 2.2.0 — ethos-zero 19.1.0 generator
 
 The build and dev dependency ethos-zero is repinned to 19.1.0 (`c0d9`), up from
