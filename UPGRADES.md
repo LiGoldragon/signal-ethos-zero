@@ -1,5 +1,14 @@
 # Upgrades
 
+## 2.1.1 — signal 10.2.0
+
+The Signal dependency is repinned to signal 10.2.0 (`2b94a00`), up from signal
+8.0.0 (`f35460de`). The generated contract, the library and the tests are
+unchanged; the build script and the full check set pass against signal 10.2.0
+with no source change. signal 10.2.0 itself selects datom-codec 0.33.0 and
+protos 0.33.0 when its `datom` feature is on. A consumer repins signal to
+`2b94a00` together with this crate.
+
 ## 2.1.0 — datom-codec 0.33.0 and protos 0.33.0
 
 The optional `datom` feature repins datom-codec 0.33.0 (`eabead4`) and protos
