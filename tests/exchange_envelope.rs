@@ -12,7 +12,10 @@ use signal::{
     ExchangeLedger, ExchangeMinting, Exchanged, FrameCapacity, FrameReading, FrameWriting, Greeted,
     Handshake, HandshakeReceipt, HandshakeRejection, Opening, Restorable, Signal, Signalizable,
 };
-use signal_ethos_zero::{ETHOS, FileLocation, Generation, GenerationRefusal, Query, Response};
+use signal_ethos_zero::{
+    ArtifactPath, ETHOS, FileLocation, Generation, GenerationRefusal, Query, RelativePath,
+    Response, SourceName,
+};
 
 /// FNV-1a over exactly the bytes of `ethos/library.ethos` followed by those of
 /// `ethos/signal.ethos`, as a signed 64-bit integer.
@@ -56,8 +59,8 @@ trait Located {
 impl Located for FileLocation {
     fn located(path: &str) -> Self {
         Self {
-            source_name: "workspace".to_owned(),
-            relative_path: path.to_owned(),
+            source_name: SourceName("workspace".to_owned()),
+            relative_path: RelativePath(path.to_owned()),
         }
     }
 }
@@ -146,7 +149,7 @@ fn a_subscription_and_a_generate_are_told_apart_by_exchange_alone() {
     let request = FileLocation::located("ethos/signal.ethos");
     let generation = Generation {
         file_location: FileLocation::located("ethos/signal.ethos"),
-        artifact_path: "src/generated/signal.rs".to_owned(),
+        artifact_path: ArtifactPath("src/generated/signal.rs".to_owned()),
     };
 
     let opened = vec![

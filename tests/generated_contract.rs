@@ -3,13 +3,14 @@
 
 use signal::{ByteViewable, Restorable, Signal, Signalizable};
 use signal_ethos_zero::{
-    Extent, FileLocation, GenerationRefusal, InvalidEthos_Data, Observe_Data, Query, Response,
+    End, Extent, FileLocation, GenerationRefusal, InvalidEthos_Data, Observe_Data, Query, Reason,
+    RelativePath, Response, SourceName, Start,
 };
 
 fn generate() -> Query {
     Query::Generate(FileLocation {
-        source_name: "workspace".to_owned(),
-        relative_path: "ethos/signal.ethos".to_owned(),
+        source_name: SourceName("workspace".to_owned()),
+        relative_path: RelativePath("ethos/signal.ethos".to_owned()),
     })
 }
 
@@ -23,8 +24,11 @@ fn query_and_response_round_trip_as_portable_frames() {
     }
     let response =
         Response::GenerationRejected(GenerationRefusal::InvalidEthos(InvalidEthos_Data {
-            extent: Extent { start: 0, end: 17 },
-            reason: "unexpected-interface-section".to_owned(),
+            extent: Extent {
+                start: Start(0),
+                end: End(17),
+            },
+            reason: Reason("unexpected-interface-section".to_owned()),
         }));
     let frame = response.signalize().expect("signalize");
     assert_eq!(frame.restore().expect("restore response"), response);

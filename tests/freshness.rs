@@ -36,8 +36,8 @@ fn a_changed_authored_type_makes_the_committed_artifact_stale() {
 #[test]
 fn a_changed_rust_type_is_stale_even_with_unchanged_authored_source() {
     let artifact = ARTIFACT.replacen(
-        "pub type ArtifactPath = String;",
-        "pub type ArtifactPath = bool;",
+        "pub struct ArtifactPath(pub String);",
+        "pub struct ArtifactPath(pub bool);",
         1,
     );
     assert_ne!(artifact, ARTIFACT, "the artifact mutation must take effect");
@@ -68,8 +68,8 @@ fn a_changed_library_type_makes_the_committed_library_stale() {
 fn a_changed_library_artifact_is_stale_with_unchanged_authored_library() {
     let artifact = include_str!("../src/generated/library.rs");
     let changed = artifact.replacen(
-        "pub type SourceName = String;",
-        "pub type SourceName = bool;",
+        "pub struct SourceName(pub String);",
+        "pub struct SourceName(pub bool);",
         1,
     );
     assert_ne!(
